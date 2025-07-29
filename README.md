@@ -68,3 +68,8 @@ paste0(spp," \~ 0 + f_year + s(scale_day, k = 3) + s(scale_depth, k =
 -   Including iid and phyto tends to cause sanity problems (expected)
 
 -   Then run cross-validation.
+
+# Notes to self
+
+2025-07-29 Testing distributions for diat_diatDino ratio. There are
+several below zero number that mess up QQplots. Might delete them.
