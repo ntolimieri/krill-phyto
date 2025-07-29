@@ -1,0 +1,468 @@
+# load libraries ###############################################################
+# stats stuff
+library(sdmTMB)
+# library(sdmTMBextra)
+library(tidyverse)
+library(mgcv)
+# plotting 
+# library(INLA)
+library(sf)
+library(rnaturalearth)
+library(rnaturalearthdata)
+library(lubridate)
+
+# helper functions for sdmTMB ###################################################
+
+source('~/GitHub/Utility-code/NT-sdmTMB-helper-functions.r')
+
+# file locations ###############################################################
+home_dir = getwd()
+data_dir = paste0(home_dir,'/data/')
+fig_dir = paste0(home_dir,'/figures/')
+# results_dir = paste0(home_dir,'/results-krill/')
+
+# run after running models to accumulate aic output
+# AIC_TABLE = get_aic_table(results_dir); AIC_TABLE
+
+# data import, cleanup, prep ###################################################
+
+
+df = data.frame(read.csv( paste0(data_dir,"PB_NASC_v5_with_depth.csv"), header=TRUE))
+# df = data.frame(read.csv( paste0(data_dir,"PB_NASC_sizeclass_with_depth.csv"), header=TRUE))
+
+head(df)
+
+df = df %>% rename(lat = LAT, lon = LON, temp=TEMP, sal=SAL, depth = matched_depth)
+
+# add year and julian day ####
+df$date = lubridate::as_date(df$DT)
+df$year = lubridate::year(df$date)
+df$fyear = as.factor(df$year)
+df$day = lubridate::yday(df$date)
+
+# add easting / northing ####
+df = sdmTMB::add_utm_columns(df, c('lon', 'lat'))
+head(df)
+
+# data prep ##############################################################
+# diat_diatDino=log10((PB.diatom+1./(PB.diatom+PB.dino+1)))
+df = df %>% mutate(diat_diatDino = log10((diatom+1/(diatom+dino+1))),
+                   Dino_diatDino = log10((dino+1/(diatom+dino+1))),
+                   diat_dino = diatom/dino
+                   )
+# ##############################################################################
+# FIT SDM MODELS ###############################################################
+################################################################################
+
+# select spp of interest #######################################################
+colnames(df)
+
+# main species = response variable
+spp = c("avNASC", "diat_diatDino", "diatom", "dino", "Pseudonitzschia")[2]
+spp
+
+# covariate phyto planton
+phyto = c("diat_diatDino", "diatom", "dino", "Pseudonitzschia","")[5] 
+phyto
+
+# make results dir #############################################################
+# file for testing distributions etc
+# results_dir = paste0(home_dir,'/results-',spp,'-base/') 
+
+# file for complete analysis
+results_dir = paste0(home_dir,'/results-',spp,'-',phyto,'/')
+dir.create(results_dir)
+
+################################################################################
+df_sdm = df[!is.na(df[,spp]),]
+dim(df_sdm)
+# df_sdm = df_sdm %>% filter(diat_diatDino >0)
+# dim(df_sdm)
+# df_sdm = df_sdm[df_sdm[,spp]>=0,]
+# make mesh ####
+# UTOFF = 20
+mesh <- make_mesh(df_sdm, xy_cols = c("X", "Y"), cutoff = 10)
+
+# scale some predictors ####
+df_sdm$scale_depth = scale(-1*df_sdm$depth)
+df_sdm$scale_day = scale(df_sdm$day)
+df_sdm$scale_sal = scale(df_sdm$sal)
+df_sdm$scale_temp = scale(df_sdm$temp)
+df_sdm$scale_fl = scale(df_sdm$FL)
+df_sdm$f_year = as.factor(df_sdm$year)
+
+# how many zeros in the DV? ####
+(rng = round(range(df_sdm[,spp]),3))
+df0 = df_sdm[ df_sdm[,spp]== 0,]
+nrow(df0)
+nrow(df_sdm)
+zeros = paste0("There were ", nrow(df0)," zeros in the data file out of ", 
+               nrow(df_sdm), " observations total = ", 100*nrow(df0)/nrow(df_sdm), "%. Data range was: ",rng[1],'-',rng[2])
+zeros
+capture.output(zeros, file = paste0(results_dir, 'zeros.txt'))
+# formulae for iteration below
+
+# set phytoplankton covariate ##################################################
+df_sdm$phyto = df_sdm[,phyto]
+
+# log_phyto = FALSE
+# rm(log_phyto)
+# # log or don't log
+# if(log_phyto==TRUE){
+#   df_sdm$phyto = log(df_sdm$phyto+1)
+#   pzeros = df_sdm %>% filter(phyto ==0)
+#   length(pzeros)
+#   df_sdm %>% filter(phyto ==0)
+#   ln_phyto = paste0("phyto log(x+1), ", length(pzeros), " zeros excluded")
+#   capture.output(print(ln_phyto), 
+#                  file = paste0(results_dir,"ln_phyto.txt"))
+#   }
+
+################################################################################
+
+forms = list(
+  paste0(spp," ~ 0 + f_year"),
+  paste0(spp," ~ 0 + f_year + s(scale_day, k = 3)"),
+  paste0(spp," ~ 0 + f_year + s(scale_depth, k = 3)"),
+  paste0(spp," ~ 0 + f_year + s(scale_day, k = 3) + s(scale_depth, k = 3)") ,
+  paste0(spp," ~ 0 + f_year + s(scale_day, k = 3) + s(scale_depth, k = 3) + phyto"),
+  paste0(spp," ~ 0 + f_year + s(scale_day, k = 3) + s(scale_depth, k = 3) + s(phyto,k=3)")
+  )[4]
+
+(n = length(forms))
+
+for(i in 1:n){ # short to look at distributions and QQ plots
+  xform = as.formula(forms[[i]])
+  # keep track of which run is going
+  write.csv( i, paste0(results_dir,"iteration.csv"))
+  print(xform)
+  # prepare model name ####
+  # rm(dprefix,zprefix,rprefix)
+  # set prefix for day
+  dprefix = paste0(spp,'-base')
+  if(str_detect(forms[[i]],"day")){dprefix=paste0(spp,'-day')}
+  if(str_detect(forms[[i]],"I\\(scale_day")){dprefix=paste0(spp,'-qrd_day')}
+  if(str_detect(forms[[i]],"s\\(scale_day")){dprefix=paste0(spp,'-sm_day')}
+  # set prefix for depth 
+  zprefix= paste0('-no_depth')
+  if(str_detect(forms[[i]],"depth")){zprefix='-depth'}
+  if(str_detect(forms[[i]],"I\\(scale_depth")){zprefix='-qrd_depth'}
+  if(str_detect(forms[[i]],"s\\(scale_depth")){zprefix='-sm_depth'}
+  # set prefix for ratio
+  phyto_exists = grep('phyto', as.character(xform))
+    if(length(phyto_exists)==0){rprefix=""}else{rprefix=paste0("-",phyto)}
+  #rprefix = phyto
+  if(str_detect(forms[[i]],"phyto")){rprefix='-linear_phyto'; sv = "~ 0 + phyto "}
+  if(str_detect(forms[[i]],"I\\(phyto")){rprefix='-quadratic_phyto'; sv = "~ 0 + phyto + I(phyto^2)"}
+  if(str_detect(forms[[i]],"s\\(phyto")){rprefix='-gam_phyto'; sv = "~ 0 + s(phyto , k = 3)"}
+  xprefix  = paste0(dprefix,zprefix,rprefix)
+  print(xprefix)
+  
+  if(exists('sv')){svform = as.formula(sv); svform}
+  # fit model
+  fit <- sdmTMB(
+    formula = xform,
+    # spatial_varying = svform,
+    data = df_sdm,
+    mesh = mesh,
+    time = "year",
+    spatial = 'on',
+    spatiotemporal = 'iid', 
+    anisotropy=TRUE,
+    family = student(),
+    silent=FALSE
+  ) # end fit
+  fit
+  sanity(fit)
+  get_model_name(fit, prefix = xprefix)
+  sdm_save_output(fit = fit, results_dir = results_dir, prefix=xprefix)
+}
+# end run models ###############################################################
+
+
+# compile sanity results for the tweedie models
+x = dir(results_dir)
+x = x[grep("sdm-", x)]
+x = x[grep("tweedie", x)]
+x
+for(i in 1:length(x)){
+  print(i)
+  m1 = readRDS(paste0(results_dir,x[i]))
+  aic = AIC(m1)
+  san = data.frame(unlist(sanity(m1)))
+  mod_perf = data.frame(t(san))
+  mod_perf$model = x[i]
+  mod_perf$aic = aic
+  if(i==1){dfperf = mod_perf}else{dfperf = data.frame(rbind(dfperf,mod_perf))}
+}
+
+## NOTE the AIC table isn't really appropriate for comparing 
+## different distributions.  Use QQ plots to check best fit for residuals
+## then look at GCV output.
+
+dfperf$model = stringr::str_remove(dfperf$model,'sdm-')
+dfperf$model = stringr::str_remove(dfperf$model,'.rds')
+dfperf$delta = dfperf$aic - min(dfperf$aic)
+dfperf = dfperf[ order(dfperf$delta),]
+write.csv(dfperf,paste0(results_dir,"AIC-sanity-table-full.csv"), row.names = FALSE)
+# view(dfperf)
+dfperfshort = dfperf[dfperf$all_ok == TRUE,c('model','all_ok','aic','delta')]
+
+write.csv(dfperfshort, paste0(results_dir,'AIC-sanity-table-short.csv'))
+view(dfperf)
+view(dfperfshort)
+################################################################################
+# cross-validation to select best model #########################################
+################################################################################
+
+cross_forms = forms
+
+(ncf = length(cross_forms))
+
+# run twice; once with spatial & spatio temporal on; once with off;
+# select species etc above
+
+cross_dir = paste0(results_dir,'cross-validation/')
+dir.create(cross_dir)
+
+# library(future)
+# plan(multisession)
+
+for(i in 1:ncf){ # SET AS NEEDED
+  xform = as.formula(cross_forms[[i]])
+  print(xform)
+  if(exists('sv')){rm(sv)}
+  # set prefix 
+  dprefix = paste0(spp,'-base')
+  if(str_detect(forms[[i]],"day")){dprefix=paste0(spp,'-day')}
+  if(str_detect(forms[[i]],"I\\(scale_day")){dprefix=paste0(spp,'-qrd_day')}
+  if(str_detect(forms[[i]],"s\\(scale_day")){dprefix=paste0(spp,'-sm_day')}
+  # set prefix for depth 
+  zprefix= paste0('-no_depth')
+  if(str_detect(forms[[i]],"depth")){zprefix='-depth'}
+  if(str_detect(forms[[i]],"I\\(scale_depth")){zprefix='-qrd_depth'}
+  if(str_detect(forms[[i]],"s\\(scale_depth")){zprefix='-sm_depth'}
+  # set prefix for ratio
+  phyto_exists = grep('phyto', as.character(xform))
+  if(length(phyto_exists)==0){rprefix=""}else{rprefix=paste0("-",phyto)}
+  #rprefix = phyto
+  if(str_detect(forms[[i]],"phyto")){rprefix='-linear_phyto'; sv = "~ 0 + phyto "}
+  if(str_detect(forms[[i]],"I\\(phyto")){rprefix='-quadratic_phyto'; sv = "~ 0 + phyto + I(phyto^2)"}
+  if(str_detect(forms[[i]],"s\\(phyto")){rprefix='-gam_phyto'; sv = "~ 0 + s(phyto , k = 3)"}
+  xprefix  = paste0(dprefix,zprefix,rprefix)
+  if(exists('sv')){svform = as.formula(sv); svform}
+  # fit model
+  cv_fit <- sdmTMB_cv(
+    formula = xform,
+    # turn on of manually
+    # spatial_varying = svform,
+    data = df_sdm,
+    mesh = mesh,
+    time = "year",
+    spatial = 'on',
+    spatiotemporal = 'iid', 
+    anisotropy=TRUE,
+    family = tweedie(),
+    silent= FALSE
+  ) # end fit
+  mname = get_model_name(cv_fit$models[[1]], prefix = xprefix)
+  mname = stringr::str_remove(mname, "sdm-")
+  mname = paste0("GCV_", mname)
+  mname
+  saveRDS(cv_fit, paste0(cross_dir, mname))
+}
+
+### get log likelihoods ########################################################
+
+x = dir(cross_dir)
+x = x[grep("GCV-", x)]
+x
+
+for(i in 1:length(x)){
+  print(i)
+  xfit = readRDS( paste0(cross_dir,x[i]))
+  LL = xfit$sum_loglik
+  modname = x[i]
+  modname = stringr::str_remove(modname,"GCV-")
+  modname = stringr::str_remove(modname,".rds")
+  print(modname)
+  print(xfit$models[[1]])
+  print(LL)
+  print(xfit$fold_loglik)
+  dfLL = data.frame(mname = modname,LL = LL)
+  if(i == 1){df_loglik = dfLL}else(df_loglik = rbind(df_loglik, dfLL))
+}
+# more positive; more better!
+df_loglik = df_loglik[order(df_loglik$LL, decreasing = TRUE),]
+df_loglik$mname = stringr::str_remove(df_loglik$mname,"CV_")
+df_loglik$mname = stringr::str_remove(df_loglik$mname,".rds")
+df_loglik = df_loglik %>% rename(model = mname)
+# remove sm_day because never fits
+san_tbl = data.frame(read.csv( paste0(results_dir,"AIC-sanity-table-full.csv")))
+san_tbl = san_tbl[,c("model", "all_ok","aic",'delta')]
+df_loglik = full_join(df_loglik, san_tbl)
+
+write.csv(df_loglik, paste0(cross_dir,"GCV-log-likelihoods.csv"), 
+          row.names = FALSE)
+view(df_loglik)
+df_good = df_loglik %>% filter(all_ok==TRUE)
+view(df_good)
+write.csv(df_good, paste0(cross_dir,"GCV-log-likelihoods-good-sanity.csv"), 
+          row.names = FALSE)
+
+################################################################################
+# RELOAD BEST FIT MODEL ########################################################
+################################################################################
+
+spp = 'avNASC'
+phyto = 'diat_diatDino'
+results_dir = paste0(home_dir,'/results-',spp,"-", phyto,"/")
+results_dir
+cross_dir = paste0(results_dir,'cross-validation/')
+
+df_good = read.csv(paste0(cross_dir,"GCV-log-likelihoods-good-sanity.csv"))
+
+best_fit_name = df_good[1,'model']
+best_fit_name
+bfit = readRDS( paste0(results_dir,'sdm-',best_fit_name,'.rds'))
+# save out best fit for future reference
+capture.output(best_fit_name, file = paste0(results_dir,"best-fit-model-name.txt"))
+capture.output(bfit, file = paste0(results_dir,"best-fit-model-results.txt"))
+saveRDS(bfit, paste0(results_dir, "Best-fit-model.rds"))
+bfit
+sanity(bfit)
+
+# # alternate reload models 
+# q = dir(results_dir)
+# q = q[grep("sdm",q)]
+# q
+# 
+# best_fit_name = q[6]
+# best_fit_name
+# bfit = readRDS( paste0(results_dir,best_fit_name))
+################################################################################
+# predictions & index ##########################################################
+################################################################################
+
+x = as.character(unlist(bfit$formula)[1])
+z = stringr::str_locate(x, "\\~")
+spp = substring(x,1,z[1]-2)
+spp
+# load grid ####
+wc_grid = data.frame(read.delim("Tolimieri_et_al_2015_Ecosphere_2km_grid.txt", header=TRUE))
+
+wc_grid = sdmTMB::add_utm_columns(wc_grid, c('LON','LAT'),units = 'km' )
+wc_grid = wc_grid %>% 
+  # change depth sign
+  mutate(Depth_m = -1*wc_grid$SRTM) %>%
+  rename(lat = LAT, lon=LON) %>%
+  # any filtering here
+  filter(Depth_m!=9999) %>%
+  mutate(scale_depth= scale(Depth_m)[,1])
+
+wc <- replicate_df(wc_grid, "year", unique(df_sdm$year))
+wc$f_year = as.factor(wc$year)
+
+wc$scale_day <- 0
+wc$phyto = mean(df_sdm$phyto)
+# wc$phyto =  median(df_sdm$phyto)
+
+# wc$scale_day = scale(wc$scale_day)
+west_coast_grid = wc
+
+# get predictions ####
+p_grid = predict(bfit, newdata = west_coast_grid, return_tmb_object = TRUE)
+index <- get_index(p_grid, bias_correct = TRUE, 
+                   area = rep(4, nrow(west_coast_grid)))
+# scaled for presentation
+index$index = index$est/ max(index$upr)
+index$i_upr = index$upr/ max(index$upr)
+index$i_lwr = index$lwr/ max(index$upr)
+# save out
+saveRDS(p_grid, file = paste0(results_dir,'predictions-',spp,'.rds'))
+write.csv(index, paste0(results_dir,'index-',spp,'.csv'))
+
+################################################################################
+# plots ########################################################################
+################################################################################
+
+## index #######################################################################
+
+ggplot(index, aes(x=year,y=est)) + 
+  geom_ribbon( aes(ymin=lwr, ymax=upr), fill='grey80') +
+  geom_line() + geom_point() + ylab(spp) +
+  # scale_x_continuous(breaks = seq(2005,max(index$date),5), 
+  #                    minor_breaks = min(index$date):max(index$date))+
+  theme_bw() + theme(axis.text = element_text(size=8))
+
+ggsave(paste0(results_dir,'index.png'), width = 4, height = 2)
+
+## map #########################################################################
+p = p_grid$data
+
+# model_type = grep('est1',colnames(p))
+
+### back transform est
+### may need to modify for different distributions
+
+if(bfit$family$link[1] == 'identity'){p$cpue = p$est}
+if(bfit$family$link[1] != 'identity'){
+  if(bfit$family$family[1]!="tweedie"){ # lognormal or gamma
+    p$prob = (exp(p$est1)/(1+exp(p$est1)))
+    p$cpue = (exp(p$est1)/(1+exp(p$est1))) * exp(p$est2)}else{
+      p$cpue = exp(p$est) 
+  }
+}
+
+# grid size is 2 x 2 km; covert value to per km2
+p$cpue = p$cpue/4
+p$index = p$cpue/(max(p$cpue))
+
+### subsetting ####
+
+min(df_sdm$lat)
+latrange = c(min(df_sdm$lat),max(df_sdm$lat))
+lonrange = c(NA, -118)
+p = p %>% filter(lat > latrange[1])
+p$Year = p$year
+pshort = p %>% filter(year %in% 2019:2024)
+
+
+# map note #####################################################################
+note = "-best"
+################################################################################
+
+# abundance from detla model
+dist_map <- plot_dist_maps(pshort, z_var = "cpue",
+                            Title = spp,
+                            lat_range = latrange,
+                            lon_range = lonrange,
+                            color_opt = 'rbgradient',
+                            midp = 50,
+                            trans = 'log')
+print(dist_map)
+ggsave(paste0(fig_dir,'dist-map-abundance-',spp,note,'.png'), 
+       width = 5, height = 5)
+ggsave(paste0(results_dir,'dist-map-abundance-',spp,note,'.png'), 
+       width = 5, height = 5)
+
+# covarate effect if appropriate ###############################################
+
+dist_map2 <- plot_dist_maps(pshort, z_var = "phyto",
+                           Title = "zeta",
+                           lat_range = latrange,
+                           lon_range = lonrange,
+                           color_opt = 'rbgradient',
+                           midp = 0.1, 
+                           trans = 'identity')
+print(dist_map2)
+ggsave(paste0(fig_dir,'dist-map-zeta-',spp,note,'.png'), 
+       width = 5, height = 5)
+ggsave(paste0(results_dir,'dist-map-zeta-',spp,note,'.png'), 
+       width = 5, height = 5)
+
+# anisotropy
+anis = plot_anisotropy(bfit)
+anis + theme_bw()
+ggsave(paste0(results_dir,'anisotropy-',spp,'.png'), width = 3.5, height=5)
+

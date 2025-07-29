@@ -1,0 +1,52 @@
+Spatiotemporal model fit by ML ['sdmTMB']
+Formula: xform
+Mesh: mesh (anisotropic covariance)
+Time column: year
+Data: df_sdm
+Family: delta_lognormal(link1 = 'logit', link2 = 'log')
+
+Delta/hurdle model 1: -----------------------------------
+Family: binomial(link = 'logit') 
+Conditional model:
+             coef.est coef.se
+f_year2019       0.30    0.35
+f_year2021       0.79    0.30
+f_year2023       0.68    0.25
+sscale_day       0.37    0.16
+sscale_depth    -0.47    0.09
+
+Smooth terms:
+                 Std. Dev.
+sds(scale_day)        1.85
+sds(scale_depth)     29.56
+
+Matérn anisotropic range (spatial): 17.1 to 116.0 at 96 deg.
+Spatial SD: 0.81
+Spatiotemporal IID SD: 1.52
+
+Delta/hurdle model 2: -----------------------------------
+Family: lognormal(link = 'log') 
+Conditional model:
+             coef.est coef.se
+f_year2019       5.71    0.30
+f_year2021       4.83    0.24
+f_year2023       4.71    0.25
+sscale_day       0.37    0.16
+sscale_depth    -0.47    0.09
+
+Smooth terms:
+                 Std. Dev.
+sds(scale_day)        0.00
+sds(scale_depth)     17.54
+
+Dispersion parameter: 2.29
+Matérn anisotropic range (spatial): 10.7 to 72.8 at 96 deg.
+Spatial SD: 1.23
+Spatiotemporal IID SD: 1.14
+
+ML criterion at convergence: 7878.048
+
+See ?tidy.sdmTMB to extract these values as a data frame.
+See ?plot_anisotropy to plot the anisotropic range.
+
+**Possible issues detected! Check output of sanity().**

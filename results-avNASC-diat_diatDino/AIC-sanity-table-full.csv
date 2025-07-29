@@ -1,0 +1,13 @@
+"hessian_ok","eigen_values_ok","nlminb_ok","range_ok","gradients_ok","se_magnitude_ok","se_na_ok","sigmas_ok","all_ok","model","aic","delta"
+TRUE,TRUE,TRUE,TRUE,TRUE,FALSE,TRUE,TRUE,FALSE,"avNASC-sm_day-sm_depth-tweedie-log-spatial-on-spatiotemp-iid-Aniso-NoDepth-746-knots",15873.332414985,0
+TRUE,TRUE,TRUE,TRUE,TRUE,FALSE,TRUE,TRUE,FALSE,"avNASC-sm_day-sm_depth-linear_phyto-tweedie-log-spatial-on-spatiotemp-iid-Aniso-NoDepth-746-knots",15874.3324972783,1.0000822933398
+TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,"avNASC-base-sm_depth-tweedie-log-spatial-on-spatiotemp-iid-Aniso-NoDepth-746-knots",15875.9770989139,2.64468392894923
+TRUE,TRUE,TRUE,TRUE,TRUE,FALSE,TRUE,TRUE,FALSE,"avNASC-sm_day-sm_depth-gam_phyto-tweedie-log-spatial-on-spatiotemp-iid-Aniso-NoDepth-746-knots",15876.3324973175,3.00008233255357
+TRUE,TRUE,TRUE,TRUE,TRUE,FALSE,TRUE,TRUE,FALSE,"avNASC-sm_day-no_depth-tweedie-log-spatial-on-spatiotemp-iid-Aniso-NoDepth-746-knots",15933.4586595707,60.1262445857719
+TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,"avNASC-base-no_depth-tweedie-log-spatial-on-spatiotemp-iid-Aniso-NoDepth-746-knots",15935.5103314126,62.1779164276122
+TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,"avNASC-sm_day-sm_depth-linear_phyto-tweedie-log-spatial-on-spatiotemp-off-Aniso-NoDepth-746-knots",16012.2876382226,138.955223237614
+TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,"avNASC-sm_day-sm_depth-gam_phyto-tweedie-log-spatial-on-spatiotemp-off-Aniso-NoDepth-746-knots",16014.0690519926,140.736637007614
+TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,"avNASC-sm_day-sm_depth-tweedie-log-spatial-on-spatiotemp-off-Aniso-NoDepth-746-knots",16022.7800947407,149.447679755738
+TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,"avNASC-base-sm_depth-tweedie-log-spatial-on-spatiotemp-off-Aniso-NoDepth-746-knots",16039.0670317421,165.73461675719
+TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,"avNASC-sm_day-no_depth-tweedie-log-spatial-on-spatiotemp-off-Aniso-NoDepth-746-knots",16079.0052857896,205.672870804608
+TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,"avNASC-base-no_depth-tweedie-log-spatial-on-spatiotemp-off-Aniso-NoDepth-746-knots",16090.8904313952,217.558016410248

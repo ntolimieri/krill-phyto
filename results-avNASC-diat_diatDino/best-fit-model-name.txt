@@ -1,0 +1,1 @@
+[1] "avNASC-sm_day-sm_depth-linear_phyto-tweedie-log-spatial-on-spatiotemp-off-Aniso-NoDepth-746-knots"

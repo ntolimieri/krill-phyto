@@ -1,0 +1,21 @@
+Spatiotemporal model fit by ML ['sdmTMB']
+Formula: xform
+Mesh: mesh (anisotropic covariance)
+Time column: year
+Data: df_sdm
+Family: gaussian(link = 'identity')
+ 
+Conditional model:
+           coef.est coef.se
+f_year2019     4.58    0.15
+f_year2021     4.64    0.11
+f_year2023     4.48    0.12
+
+Dispersion parameter: 0.56
+Matérn anisotropic range (spatial): 48.2 to 65.9 at 137 deg.
+Spatial SD: 0.24
+Spatiotemporal IID SD: 0.79
+ML criterion at convergence: 6721.681
+
+See ?tidy.sdmTMB to extract these values as a data frame.
+See ?plot_anisotropy to plot the anisotropic range.
