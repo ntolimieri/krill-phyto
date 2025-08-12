@@ -1,0 +1,27 @@
+$hessian_ok
+[1] FALSE
+
+$eigen_values_ok
+[1] TRUE
+
+$nlminb_ok
+[1] TRUE
+
+$range_ok
+[1] TRUE
+
+$gradients_ok
+[1] TRUE
+
+$se_magnitude_ok
+[1] FALSE
+
+$se_na_ok
+[1] TRUE
+
+$sigmas_ok
+[1] TRUE
+
+$all_ok
+[1] FALSE
+

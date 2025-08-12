@@ -1,0 +1,1 @@
+[1] "There were 119 zeros in the data file out of 6867 observations total = 1.7329255861366%. Data range was: 0-5035153.471"

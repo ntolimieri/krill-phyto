@@ -2,12 +2,9 @@
 "unlist.sanity.m1..2","avNASC-base-sm_depth-tweedie-log-spatial-on-spatiotemp-iid-Aniso-746-knots",TRUE,15875.9770989139,2.64468392894923
 "unlist.sanity.m1..4","avNASC-day-no_depth-tweedie-log-spatial-on-spatiotemp-iid-Aniso-746-knots",TRUE,15931.4586590117,58.1262440267383
 "unlist.sanity.m1..","avNASC-base-no_depth-tweedie-log-spatial-on-spatiotemp-iid-Aniso-746-knots",TRUE,15935.5103314126,62.1779164276122
-"unlist.sanity.m1..17","avNASC-sm_day-sm_depth-quadratic_phyto-tweedie-log-spatial-on-spatiotemp-off-Aniso-746-knots",TRUE,16011.9819867173,138.649571732321
-"unlist.sanity.m1..15","avNASC-sm_day-sm_depth-linear_phyto-tweedie-log-spatial-on-spatiotemp-off-Aniso-746-knots",TRUE,16012.2876382226,138.955223237614
-"unlist.sanity.m1..13","avNASC-sm_day-sm_depth-gam_phyto-tweedie-log-spatial-on-spatiotemp-off-Aniso-746-knots",TRUE,16014.0690519926,140.736637007614
-"unlist.sanity.m1..19","avNASC-sm_day-sm_depth-tweedie-log-spatial-on-spatiotemp-off-Aniso-746-knots",TRUE,16022.7800947407,149.447679755738
+"unlist.sanity.m1..17","avNASC-sm_day-sm_depth-tweedie-log-spatial-on-spatiotemp-off-Aniso-746-knots",TRUE,16022.7800947407,149.447679755738
+"unlist.sanity.m1..12","avNASC-sm_day-sm_depth-gam_phyto-tweedie-log-spatial-on-spatiotemp-off-Aniso-746-knots",TRUE,16024.0470399712,150.714624986244
 "unlist.sanity.m1..3","avNASC-base-sm_depth-tweedie-log-spatial-on-spatiotemp-off-Aniso-746-knots",TRUE,16039.0670317421,165.73461675719
-"unlist.sanity.m1..7","avNASC-sm_day-depth-linear_phyto-tweedie-log-spatial-on-spatiotemp-off-Aniso-746-knots",TRUE,16059.5364106598,186.203995674887
 "unlist.sanity.m1..9","avNASC-sm_day-depth-tweedie-log-spatial-on-spatiotemp-off-Aniso-746-knots",TRUE,16066.5546233958,193.222208410809
 "unlist.sanity.m1..5","avNASC-day-no_depth-tweedie-log-spatial-on-spatiotemp-off-Aniso-746-knots",TRUE,16077.9467446797,204.614329694754
 "unlist.sanity.m1..11","avNASC-sm_day-no_depth-tweedie-log-spatial-on-spatiotemp-off-Aniso-746-knots",TRUE,16079.0052857896,205.672870804608

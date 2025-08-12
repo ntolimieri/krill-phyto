@@ -58,11 +58,11 @@ df = df %>% mutate(diat_diatDino = log10((diatom+1/(diatom+dino+1))),
 colnames(df)
 
 # main species = response variable
-spp = c("avNASC", "diat_diatDino", "diatom", "dino", "Pseudonitzschia")[2]
+spp = c("avNASC", "diat_diatDino", "diatom", "dino", "Pseudonitzschia")[1]
 spp
 
 # covariate phyto planton
-phyto = c("diat_diatDino", "diatom", "dino", "Pseudonitzschia","")[5] 
+phyto = c("diat_diatDino", "diatom", "dino", "Pseudonitzschia",NA)[1] 
 phyto
 
 # make results dir #############################################################
@@ -70,7 +70,9 @@ phyto
 # results_dir = paste0(home_dir,'/results-',spp,'-base/') 
 
 # file for complete analysis
-results_dir = paste0(home_dir,'/results-',spp,'-',phyto,'/')
+if(is.na(phyto)==TRUE){results_dir = paste0(home_dir,'/results-',spp,'/')}else{
+  results_dir = paste0(home_dir,'/results-',spp,'-',phyto,'/')}
+results_dir
 dir.create(results_dir)
 
 ################################################################################
@@ -81,6 +83,8 @@ dim(df_sdm)
 # df_sdm = df_sdm[df_sdm[,spp]>=0,]
 # make mesh ####
 # UTOFF = 20
+df_sdm = df_sdm[df_sdm[,spp] >= 0,]
+
 mesh <- make_mesh(df_sdm, xy_cols = c("X", "Y"), cutoff = 10)
 
 # scale some predictors ####
@@ -100,6 +104,10 @@ zeros = paste0("There were ", nrow(df0)," zeros in the data file out of ",
                nrow(df_sdm), " observations total = ", 100*nrow(df0)/nrow(df_sdm), "%. Data range was: ",rng[1],'-',rng[2])
 zeros
 capture.output(zeros, file = paste0(results_dir, 'zeros.txt'))
+
+dfneg = df_sdm[df_sdm[,spp] < 0,]
+nrow(dfneg)
+
 # formulae for iteration below
 
 # set phytoplankton covariate ##################################################
@@ -121,13 +129,17 @@ df_sdm$phyto = df_sdm[,phyto]
 ################################################################################
 
 forms = list(
-  paste0(spp," ~ 0 + f_year"),
-  paste0(spp," ~ 0 + f_year + s(scale_day, k = 3)"),
-  paste0(spp," ~ 0 + f_year + s(scale_depth, k = 3)"),
-  paste0(spp," ~ 0 + f_year + s(scale_day, k = 3) + s(scale_depth, k = 3)") ,
-  paste0(spp," ~ 0 + f_year + s(scale_day, k = 3) + s(scale_depth, k = 3) + phyto"),
-  paste0(spp," ~ 0 + f_year + s(scale_day, k = 3) + s(scale_depth, k = 3) + s(phyto,k=3)")
-  )[4]
+  paste0(spp," ~ 0 + f_year"), #1
+  paste0(spp," ~ 0 + f_year + scale_day"), #2
+  paste0(spp," ~ 0 + f_year + s(scale_day, k = 3)"), #3
+  paste0(spp," ~ 0 + f_year + s(scale_depth, k = 3)"), #4
+  paste0(spp," ~ 0 + f_year + s(scale_day, k = 3) + scale_depth"), #5
+  paste0(spp," ~ 0 + f_year + s(scale_day, k = 3) + scale_depth + phyto"), #6
+  paste0(spp," ~ 0 + f_year + s(scale_day, k = 3) + s(scale_depth, k = 3)"), #7
+  paste0(spp," ~ 0 + f_year + s(scale_day, k = 3) + s(scale_depth, k = 3) + phyto"), #8
+  paste0(spp," ~ 0 + f_year + s(scale_day, k = 3) + s(scale_depth, k = 3) + phyto + I(phyto^2)"), #9
+  paste0(spp," ~ 0 + f_year + s(scale_day, k = 3) + s(scale_depth, k = 3) + s(phyto,k=3)") #10
+  )[1:10]
 
 (n = length(forms))
 
@@ -167,9 +179,9 @@ for(i in 1:n){ # short to look at distributions and QQ plots
     mesh = mesh,
     time = "year",
     spatial = 'on',
-    spatiotemporal = 'iid', 
+    spatiotemporal = 'off', 
     anisotropy=TRUE,
-    family = student(),
+    family = tweedie(),
     silent=FALSE
   ) # end fit
   fit
@@ -190,9 +202,15 @@ for(i in 1:length(x)){
   m1 = readRDS(paste0(results_dir,x[i]))
   aic = AIC(m1)
   san = data.frame(unlist(sanity(m1)))
+  convg = san['nlminb_ok',]
   mod_perf = data.frame(t(san))
   mod_perf$model = x[i]
   mod_perf$aic = aic
+  mod_perf$converged = convg
+  mod_perf = mod_perf[,c('model','converged','all_ok','aic',
+                         "hessian_ok", "eigen_values_ok", "nlminb_ok", 
+                         "range_ok", "gradients_ok","se_magnitude_ok",
+                         "se_na_ok","sigmas_ok" )]
   if(i==1){dfperf = mod_perf}else{dfperf = data.frame(rbind(dfperf,mod_perf))}
 }
 
@@ -202,7 +220,7 @@ for(i in 1:length(x)){
 
 dfperf$model = stringr::str_remove(dfperf$model,'sdm-')
 dfperf$model = stringr::str_remove(dfperf$model,'.rds')
-dfperf$delta = dfperf$aic - min(dfperf$aic)
+dfperf$delta = dfperf$aic - min(dfperf$aic, na.rm = TRUE)
 dfperf = dfperf[ order(dfperf$delta),]
 write.csv(dfperf,paste0(results_dir,"AIC-sanity-table-full.csv"), row.names = FALSE)
 # view(dfperf)
@@ -211,15 +229,17 @@ dfperfshort = dfperf[dfperf$all_ok == TRUE,c('model','all_ok','aic','delta')]
 write.csv(dfperfshort, paste0(results_dir,'AIC-sanity-table-short.csv'))
 view(dfperf)
 view(dfperfshort)
+
 ################################################################################
 # cross-validation to select best model #########################################
 ################################################################################
 
 cross_forms = forms
+cross_forms
 
 (ncf = length(cross_forms))
 
-# run twice; once with spatial & spatio temporal on; once with off;
+# run twice; once with spatial & spatio temporal on; once with spatio temporal off;
 # select species etc above
 
 cross_dir = paste0(results_dir,'cross-validation/')
@@ -275,7 +295,7 @@ for(i in 1:ncf){ # SET AS NEEDED
 ### get log likelihoods ########################################################
 
 x = dir(cross_dir)
-x = x[grep("GCV-", x)]
+x = x[grep("GCV_", x)]
 x
 
 for(i in 1:length(x)){
@@ -283,7 +303,7 @@ for(i in 1:length(x)){
   xfit = readRDS( paste0(cross_dir,x[i]))
   LL = xfit$sum_loglik
   modname = x[i]
-  modname = stringr::str_remove(modname,"GCV-")
+  modname = stringr::str_remove(modname,"GCV_")
   modname = stringr::str_remove(modname,".rds")
   print(modname)
   print(xfit$models[[1]])
@@ -294,7 +314,7 @@ for(i in 1:length(x)){
 }
 # more positive; more better!
 df_loglik = df_loglik[order(df_loglik$LL, decreasing = TRUE),]
-df_loglik$mname = stringr::str_remove(df_loglik$mname,"CV_")
+df_loglik$mname = stringr::str_remove(df_loglik$mname,"GCV_")
 df_loglik$mname = stringr::str_remove(df_loglik$mname,".rds")
 df_loglik = df_loglik %>% rename(model = mname)
 # remove sm_day because never fits

@@ -46,7 +46,6 @@ values, but was better than delta-lognormal and delta-gamma.
 ### Fitting
 
 -   Run all models with and without spatiotemporal field:
-
 -   phyto = diat_diatDino ratio for first set.
 
 paste0(spp," \~ 0 + f_year"), paste0(spp," \~ 0 + f_year + s(scale_day,
@@ -64,12 +63,24 @@ paste0(spp," \~ 0 + f_year + s(scale_day, k = 3) + s(scale_depth, k =
 3) + s(phyto,k=3)") )
 
 -   Build AIC and Sanity table.
-
 -   Including iid and phyto tends to cause sanity problems (expected)
-
 -   Then run cross-validation.
+
+
+
+## diat_diatDino models (diatom/dinoflagelate ratio distributions)
+
+- file contains some negative values ~ 20; deleted because they cause fitting issues.  
+
+# diatom only models
+
+# dinoflagellate only models
+- ran base models for QQplots with spatial and spatiotemporal fields
+-- difficulty with most models. Dropping spatial field allows fit with good Sanity outputs but QQplots for most distributions pretty marginal.
+
+
 
 # Notes to self
 
-2025-07-29 Testing distributions for diat_diatDino ratio. There are
-several below zero number that mess up QQplots. Might delete them.
+**2025-07-29** Testing distributions for diat_diatDino ratio. There are
+several below zero number that mess up QQplots. Might delete them. 20 in total. 

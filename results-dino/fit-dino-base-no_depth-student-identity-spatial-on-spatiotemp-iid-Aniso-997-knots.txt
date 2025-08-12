@@ -7,15 +7,15 @@ Family: student(link = 'identity')
  
 Conditional model:
            coef.est coef.se
-f_year2019     4.62    0.13
-f_year2021     4.68    0.10
-f_year2023     4.57    0.10
+f_year2019 10646.77  350.65
+f_year2021  8443.38  266.31
+f_year2023 12120.18  306.27
 
-Dispersion parameter: 0.26
-Matérn anisotropic range (spatial): 43.3 to 61.5 at 147 deg.
-Spatial SD: 0.27
-Spatiotemporal IID SD: 0.73
-ML criterion at convergence: 4754.063
+Dispersion parameter: 12208.74
+Matérn anisotropic range (spatial): 2.8 to 2.8 at 115 deg.
+Spatial SD: 0.28
+Spatiotemporal IID SD: 0.28
+ML criterion at convergence: 79023.757
 
 See ?tidy.sdmTMB to extract these values as a data frame.
 See ?plot_anisotropy to plot the anisotropic range.

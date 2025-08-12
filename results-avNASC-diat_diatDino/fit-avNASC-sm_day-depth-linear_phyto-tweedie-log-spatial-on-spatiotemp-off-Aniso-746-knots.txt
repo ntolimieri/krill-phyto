@@ -1,0 +1,28 @@
+Spatial model fit by ML ['sdmTMB']
+Formula: xform
+Mesh: mesh (anisotropic covariance)
+Time column: year
+Data: df_sdm
+Family: tweedie(link = 'log')
+ 
+Conditional model:
+            coef.est coef.se
+f_year2019      4.58    0.42
+f_year2021      3.94    0.41
+f_year2023      3.94    0.37
+scale_depth    -0.34    0.08
+phyto          -0.21    0.07
+sscale_day      0.52    0.15
+
+Smooth terms:
+               Std. Dev.
+sds(scale_day)      1.82
+
+Dispersion parameter: 9.37
+Tweedie p: 1.77
+Matérn anisotropic range (spatial): 13.1 to 63.4 at 101 deg.
+Spatial SD: 2.15
+ML criterion at convergence: 8016.768
+
+See ?tidy.sdmTMB to extract these values as a data frame.
+See ?plot_anisotropy to plot the anisotropic range.
