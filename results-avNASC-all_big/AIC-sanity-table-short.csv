@@ -1,0 +1,5 @@
+"","model","all_ok","aic","delta"
+"unlist.sanity.m1..1","avNASC-base-sm_depth-tweedie-log-spatial-on-spatiotemp-iid-Aniso-746-knots",TRUE,15875.9770989139,2.64468392894923
+"unlist.sanity.m1..2","avNASC-day-no_depth-tweedie-log-spatial-on-spatiotemp-iid-Aniso-746-knots",TRUE,15931.4586590117,58.1262440267383
+"unlist.sanity.m1..","avNASC-base-no_depth-tweedie-log-spatial-on-spatiotemp-iid-Aniso-746-knots",TRUE,15935.5103314126,62.1779164276122
+"unlist.sanity.m1..7","avNASC-sm_day-sm_depth-gam_phyto-tweedie-log-spatial-on-spatiotemp-off-Aniso-746-knots",TRUE,16021.4449686489,148.112553663903

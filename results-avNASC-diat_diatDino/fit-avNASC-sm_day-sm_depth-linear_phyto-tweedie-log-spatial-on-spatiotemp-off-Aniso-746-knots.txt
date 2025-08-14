@@ -7,23 +7,23 @@ Family: tweedie(link = 'log')
  
 Conditional model:
              coef.est coef.se
-f_year2019       4.93    0.40
-f_year2021       4.26    0.40
-f_year2023       4.35    0.36
-phyto           -0.25    0.07
-sscale_day       0.47    0.12
-sscale_depth    -0.72    0.09
+f_year2019       5.40    0.45
+f_year2021       4.72    0.45
+f_year2023       4.81    0.41
+phyto           -0.34    0.08
+sscale_day       0.44    0.12
+sscale_depth    -0.73    0.09
 
 Smooth terms:
                  Std. Dev.
-sds(scale_day)        1.38
-sds(scale_depth)     53.98
+sds(scale_day)        1.11
+sds(scale_depth)     54.33
 
-Dispersion parameter: 9.37
+Dispersion parameter: 9.35
 Tweedie p: 1.77
-Matérn anisotropic range (spatial): 11.7 to 44.5 at 101 deg.
-Spatial SD: 1.95
-ML criterion at convergence: 7992.144
+Matérn anisotropic range (spatial): 11.3 to 45.1 at 101 deg.
+Spatial SD: 1.94
+ML criterion at convergence: 7950.740
 
 See ?tidy.sdmTMB to extract these values as a data frame.
 See ?plot_anisotropy to plot the anisotropic range.

@@ -1,0 +1,14 @@
+"model","LL","all_ok","aic","delta"
+"avNASC-sm_day-sm_depth-gam_phyto-tweedie-log-spatial-on-spatiotemp-off-Aniso-746-knots",-8504.61460521106,TRUE,16021.4449686489,148.112553663903
+"avNASC-base-sm_depth-tweedie-log-spatial-on-spatiotemp-iid-Aniso-746-knots",-8923.55827796788,TRUE,15875.9770989139,2.64468392894923
+"avNASC-base-no_depth-tweedie-log-spatial-on-spatiotemp-iid-Aniso-746-knots",-9171.92980040635,TRUE,15935.5103314126,62.1779164276122
+"avNASC-day-no_depth-tweedie-log-spatial-on-spatiotemp-iid-Aniso-746-knots",-9250.68372727173,TRUE,15931.4586590117,58.1262440267383
+"avNASC-sm_day-sm_depth-tweedie-log-spatial-on-spatiotemp-iid-Aniso-746-knots",NA,FALSE,15873.332414985,0
+"avNASC-sm_day-depth-tweedie-log-spatial-on-spatiotemp-iid-Aniso-746-knots",NA,FALSE,15922.6780493975,49.345634412497
+"avNASC-sm_day-no_depth-tweedie-log-spatial-on-spatiotemp-iid-Aniso-746-knots",NA,FALSE,15933.4586595707,60.1262445857719
+"avNASC-sm_day-depth-linear_phyto-tweedie-log-spatial-on-spatiotemp-iid-Aniso-746-knots",NA,FALSE,NA,NA
+"avNASC-sm_day-depth-linear_phyto-tweedie-log-spatial-on-spatiotemp-off-Aniso-746-knots",NA,FALSE,NA,NA
+"avNASC-sm_day-sm_depth-linear_phyto-tweedie-log-spatial-on-spatiotemp-iid-Aniso-746-knots",NA,FALSE,NA,NA
+"avNASC-sm_day-sm_depth-linear_phyto-tweedie-log-spatial-on-spatiotemp-off-Aniso-746-knots",NA,FALSE,NA,NA
+"avNASC-sm_day-sm_depth-quadratic_phyto-tweedie-log-spatial-on-spatiotemp-iid-Aniso-746-knots",NA,FALSE,NA,NA
+"avNASC-sm_day-sm_depth-quadratic_phyto-tweedie-log-spatial-on-spatiotemp-off-Aniso-746-knots",NA,FALSE,NA,NA

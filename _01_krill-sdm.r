@@ -34,7 +34,16 @@ head(df)
 
 df = df %>% rename(lat = LAT, lon = LON, temp=TEMP, sal=SAL, depth = matched_depth)
 
-# add year and julian day ####
+## combine groups for some analyses ############################################
+
+# Cerataulina,Dactyliosolen,Detonula,Guinardia
+# Lauderia
+
+df = df %>% mutate(big1 = Cera_Dact_Deto_Guin + Lauderia,
+                   all_big = big1+ Chaetoceros+Eucampia+Thalassiosira)
+
+
+# add year and julian day ######################################################
 df$date = lubridate::as_date(df$DT)
 df$year = lubridate::year(df$date)
 df$fyear = as.factor(df$year)
@@ -44,7 +53,7 @@ df$day = lubridate::yday(df$date)
 df = sdmTMB::add_utm_columns(df, c('lon', 'lat'))
 head(df)
 
-# data prep ##############################################################
+# data prep ####################################################################
 # diat_diatDino=log10((PB.diatom+1./(PB.diatom+PB.dino+1)))
 df = df %>% mutate(diat_diatDino = log10((diatom+1/(diatom+dino+1))),
                    Dino_diatDino = log10((dino+1/(diatom+dino+1))),
@@ -61,9 +70,31 @@ colnames(df)
 spp = c("avNASC", "diat_diatDino", "diatom", "dino", "Pseudonitzschia")[1]
 spp
 
-# covariate phyto planton
-phyto = c("diat_diatDino", "diatom", "dino", "Pseudonitzschia",NA)[1] 
+df_sdm = df[!is.na(df[,spp]),]
+df_sdm = df_sdm[df_sdm[,spp] >= 0,]
+dim(df_sdm)
+
+# add covarate if appropriate
+phyto = c("diat_diatDino", "diatom", "dino", "Pseudonitzschia",
+         'Cera_Dact_Deto_Guin', 'big1', 'all_big',NA)[1] 
 phyto
+
+# scale phyto for fitting or not
+# df_sdm$phyto = scale(df_sdm[,phyto])
+df_sdm$phyto = df_sdm[,phyto]
+
+ggplot(df_sdm, aes(phyto)) + 
+  geom_histogram()
+
+# remove negative and zero values for diat_diatDino ration
+# total of about 14 points
+nrow(df_sdm)
+if(phyto == "diat_diatDino"){df_sdm = df_sdm[df_sdm$phyto>0,]}
+nrow(df_sdm)
+
+ggplot(df_sdm, aes(phyto)) + 
+  geom_histogram()
+ggsave( paste0(results_dir,"phyto-hist.png"))
 
 # make results dir #############################################################
 # file for testing distributions etc
@@ -76,14 +107,6 @@ results_dir
 dir.create(results_dir)
 
 ################################################################################
-df_sdm = df[!is.na(df[,spp]),]
-dim(df_sdm)
-# df_sdm = df_sdm %>% filter(diat_diatDino >0)
-# dim(df_sdm)
-# df_sdm = df_sdm[df_sdm[,spp]>=0,]
-# make mesh ####
-# UTOFF = 20
-df_sdm = df_sdm[df_sdm[,spp] >= 0,]
 
 mesh <- make_mesh(df_sdm, xy_cols = c("X", "Y"), cutoff = 10)
 
@@ -105,41 +128,36 @@ zeros = paste0("There were ", nrow(df0)," zeros in the data file out of ",
 zeros
 capture.output(zeros, file = paste0(results_dir, 'zeros.txt'))
 
-dfneg = df_sdm[df_sdm[,spp] < 0,]
-nrow(dfneg)
 
 # formulae for iteration below
 
 # set phytoplankton covariate ##################################################
-df_sdm$phyto = df_sdm[,phyto]
 
-# log_phyto = FALSE
-# rm(log_phyto)
-# # log or don't log
-# if(log_phyto==TRUE){
-#   df_sdm$phyto = log(df_sdm$phyto+1)
-#   pzeros = df_sdm %>% filter(phyto ==0)
-#   length(pzeros)
-#   df_sdm %>% filter(phyto ==0)
-#   ln_phyto = paste0("phyto log(x+1), ", length(pzeros), " zeros excluded")
-#   capture.output(print(ln_phyto), 
-#                  file = paste0(results_dir,"ln_phyto.txt"))
-#   }
 
 ################################################################################
 
 forms = list(
   paste0(spp," ~ 0 + f_year"), #1
+  
   paste0(spp," ~ 0 + f_year + scale_day"), #2
   paste0(spp," ~ 0 + f_year + s(scale_day, k = 3)"), #3
-  paste0(spp," ~ 0 + f_year + s(scale_depth, k = 3)"), #4
-  paste0(spp," ~ 0 + f_year + s(scale_day, k = 3) + scale_depth"), #5
-  paste0(spp," ~ 0 + f_year + s(scale_day, k = 3) + scale_depth + phyto"), #6
-  paste0(spp," ~ 0 + f_year + s(scale_day, k = 3) + s(scale_depth, k = 3)"), #7
-  paste0(spp," ~ 0 + f_year + s(scale_day, k = 3) + s(scale_depth, k = 3) + phyto"), #8
-  paste0(spp," ~ 0 + f_year + s(scale_day, k = 3) + s(scale_depth, k = 3) + phyto + I(phyto^2)"), #9
-  paste0(spp," ~ 0 + f_year + s(scale_day, k = 3) + s(scale_depth, k = 3) + s(phyto,k=3)") #10
-  )[1:10]
+  
+  paste0(spp," ~ 0 + f_year + scale_depth"), #4
+  paste0(spp," ~ 0 + f_year + s(scale_depth, k = 3)"), #5
+  
+  paste0(spp," ~ 0 + f_year + s(scale_day, k = 3) + scale_depth"), #6
+  paste0(spp," ~ 0 + f_year + s(scale_day, k = 3) + s(scale_depth, k = 3)"),  #7
+  
+  paste0(spp," ~ 0 + f_year + s(scale_day, k = 3) + phyto"), #8
+  paste0(spp," ~ 0 + f_year + s(scale_day, k = 3) + phyto + I(phyto^2)"), #9
+  paste0(spp," ~ 0 + f_year + s(scale_day, k = 3) + s(phyto,k=3)" ), #10
+
+  paste0(spp," ~ 0 + f_year + s(scale_day, k = 3) + scale_depth + phyto"),#11
+  paste0(spp," ~ 0 + f_year + s(scale_day, k = 3) + scale_depth + + s(phyto,k=3)"),#12
+  paste0(spp," ~ 0 + f_year + s(scale_day, k = 3) + s(scale_depth, k = 3) + phyto"), #13
+  paste0(spp," ~ 0 + f_year + s(scale_day, k = 3) + s(scale_depth, k = 3) + phyto + I(phyto^2)"), #14
+  paste0(spp," ~ 0 + f_year + s(scale_day, k = 3) + s(scale_depth, k = 3) + s(phyto,k=3)") #15
+  )
 
 (n = length(forms))
 
@@ -151,12 +169,12 @@ for(i in 1:n){ # short to look at distributions and QQ plots
   # prepare model name ####
   # rm(dprefix,zprefix,rprefix)
   # set prefix for day
-  dprefix = paste0(spp,'-base')
+  dprefix = paste0(spp,'')
   if(str_detect(forms[[i]],"day")){dprefix=paste0(spp,'-day')}
   if(str_detect(forms[[i]],"I\\(scale_day")){dprefix=paste0(spp,'-qrd_day')}
   if(str_detect(forms[[i]],"s\\(scale_day")){dprefix=paste0(spp,'-sm_day')}
   # set prefix for depth 
-  zprefix= paste0('-no_depth')
+  zprefix= paste0('')
   if(str_detect(forms[[i]],"depth")){zprefix='-depth'}
   if(str_detect(forms[[i]],"I\\(scale_depth")){zprefix='-qrd_depth'}
   if(str_detect(forms[[i]],"s\\(scale_depth")){zprefix='-sm_depth'}
@@ -172,6 +190,7 @@ for(i in 1:n){ # short to look at distributions and QQ plots
   
   if(exists('sv')){svform = as.formula(sv); svform}
   # fit model
+  rm(fit)
   fit <- sdmTMB(
     formula = xform,
     # spatial_varying = svform,
@@ -189,6 +208,7 @@ for(i in 1:n){ # short to look at distributions and QQ plots
   get_model_name(fit, prefix = xprefix)
   sdm_save_output(fit = fit, results_dir = results_dir, prefix=xprefix)
 }
+
 # end run models ###############################################################
 
 
@@ -253,12 +273,12 @@ for(i in 1:ncf){ # SET AS NEEDED
   print(xform)
   if(exists('sv')){rm(sv)}
   # set prefix 
-  dprefix = paste0(spp,'-base')
+  dprefix = paste0(spp,'')
   if(str_detect(forms[[i]],"day")){dprefix=paste0(spp,'-day')}
   if(str_detect(forms[[i]],"I\\(scale_day")){dprefix=paste0(spp,'-qrd_day')}
   if(str_detect(forms[[i]],"s\\(scale_day")){dprefix=paste0(spp,'-sm_day')}
   # set prefix for depth 
-  zprefix= paste0('-no_depth')
+  zprefix= paste0('')
   if(str_detect(forms[[i]],"depth")){zprefix='-depth'}
   if(str_detect(forms[[i]],"I\\(scale_depth")){zprefix='-qrd_depth'}
   if(str_detect(forms[[i]],"s\\(scale_depth")){zprefix='-sm_depth'}
@@ -272,6 +292,7 @@ for(i in 1:ncf){ # SET AS NEEDED
   xprefix  = paste0(dprefix,zprefix,rprefix)
   if(exists('sv')){svform = as.formula(sv); svform}
   # fit model
+  rm(cv_fit)
   cv_fit <- sdmTMB_cv(
     formula = xform,
     # turn on of manually
@@ -342,6 +363,7 @@ cross_dir = paste0(results_dir,'cross-validation/')
 
 df_good = read.csv(paste0(cross_dir,"GCV-log-likelihoods-good-sanity.csv"))
 
+# double check row here
 best_fit_name = df_good[1,'model']
 best_fit_name
 bfit = readRDS( paste0(results_dir,'sdm-',best_fit_name,'.rds'))
@@ -372,35 +394,56 @@ spp
 wc_grid = data.frame(read.delim("Tolimieri_et_al_2015_Ecosphere_2km_grid.txt", header=TRUE))
 
 wc_grid = sdmTMB::add_utm_columns(wc_grid, c('LON','LAT'),units = 'km' )
-wc_grid = wc_grid %>% 
-  # change depth sign
-  mutate(Depth_m = -1*wc_grid$SRTM) %>%
-  rename(lat = LAT, lon=LON) %>%
-  # any filtering here
-  filter(Depth_m!=9999) %>%
-  mutate(scale_depth= scale(Depth_m)[,1])
+head(wc_grid)
+# Note, depth is a negative number in both files before scaling
+# need to transfer over the scaled depth from the df_sdm file NOT
+# scale the depths here. Math would be wrong.
 
+wc_grid = wc_grid %>% 
+  mutate(depth_m = SRTM_M) %>%
+  rename(lat = LAT, lon=LON) %>%
+  filter(depth_m != -9999)
+
+# transfer over known values BUT lots of NAs
+xdepth = data.frame(depth_wc = wc_grid$depth_m)
+xdepth$scale_depth = df_sdm$scale_depth[ match(xdepth$depth_wc, df_sdm$depth) ]
+# quick look, don't save
+# plot(scale_depth ~ depth_wc, data=xdepth)
+# interpolate missing depths
+lm1 = lm(scale_depth ~ depth_wc, data = xdepth)
+new_depth = data.frame(depth_wc = wc_grid$depth_m)
+p1 = predict(lm1, newdata = new_depth)
+p2 = data.frame(depth_m = new_depth$depth_wc, scale_depth = p1)
+
+# double check
+plot(p2$scale_depth, p2$depth_m)
+
+# add to wc file
+wc_grid$scale_depth = p2$scale_depth[ match(wc_grid$depth_m,p2$depth_m)]
+head(wc_grid)  
 wc <- replicate_df(wc_grid, "year", unique(df_sdm$year))
 wc$f_year = as.factor(wc$year)
 
-wc$scale_day <- 0
-wc$phyto = mean(df_sdm$phyto)
-# wc$phyto =  median(df_sdm$phyto)
+# smoothed terms in the grid ##########
+# for terms that do not have specific values in the grid (like day or phyto)
+# set the value to either the mean/median or zero (if the term was scaled
+# to mean = 0)
 
-# wc$scale_day = scale(wc$scale_day)
-west_coast_grid = wc
+wc$scale_day <- 0
+# wc$scale_depth <- 0
+wc$phyto = mean(df_sdm$phyto)
 
 # get predictions ####
-p_grid = predict(bfit, newdata = west_coast_grid, return_tmb_object = TRUE)
-index <- get_index(p_grid, bias_correct = TRUE, 
-                   area = rep(4, nrow(west_coast_grid)))
-# scaled for presentation
-index$index = index$est/ max(index$upr)
-index$i_upr = index$upr/ max(index$upr)
-index$i_lwr = index$lwr/ max(index$upr)
-# save out
+p_grid = predict(bfit, newdata = wc, return_tmb_object = TRUE)
+# index <- get_index(p_grid, bias_correct = TRUE, 
+#                    area = rep(4, nrow(west_coast_grid)))
+# # scaled for presentation
+# index$index = index$est/ max(index$upr)
+# index$i_upr = index$upr/ max(index$upr)
+# index$i_lwr = index$lwr/ max(index$upr)
+# # save out
 saveRDS(p_grid, file = paste0(results_dir,'predictions-',spp,'.rds'))
-write.csv(index, paste0(results_dir,'index-',spp,'.csv'))
+# write.csv(index, paste0(results_dir,'index-',spp,'.csv'))
 
 ################################################################################
 # plots ########################################################################
@@ -408,18 +451,19 @@ write.csv(index, paste0(results_dir,'index-',spp,'.csv'))
 
 ## index #######################################################################
 
-ggplot(index, aes(x=year,y=est)) + 
-  geom_ribbon( aes(ymin=lwr, ymax=upr), fill='grey80') +
-  geom_line() + geom_point() + ylab(spp) +
-  # scale_x_continuous(breaks = seq(2005,max(index$date),5), 
-  #                    minor_breaks = min(index$date):max(index$date))+
-  theme_bw() + theme(axis.text = element_text(size=8))
-
-ggsave(paste0(results_dir,'index.png'), width = 4, height = 2)
+# ggplot(index, aes(x=year,y=est)) + 
+#   geom_ribbon( aes(ymin=lwr, ymax=upr), fill='grey80') +
+#   geom_line() + geom_point() + ylab(spp) +
+#   # scale_x_continuous(breaks = seq(2005,max(index$date),5), 
+#   #                    minor_breaks = min(index$date):max(index$date))+
+#   theme_bw() + theme(axis.text = element_text(size=8))
+# 
+# ggsave(paste0(results_dir,'index.png'), width = 4, height = 2)
 
 ## map #########################################################################
 p = p_grid$data
-
+head(p)
+range(p$est)
 # model_type = grep('est1',colnames(p))
 
 ### back transform est
@@ -446,7 +490,7 @@ lonrange = c(NA, -118)
 p = p %>% filter(lat > latrange[1])
 p$Year = p$year
 pshort = p %>% filter(year %in% 2019:2024)
-
+head(p)
 
 # map note #####################################################################
 note = "-best"
@@ -461,9 +505,9 @@ dist_map <- plot_dist_maps(pshort, z_var = "cpue",
                             midp = 50,
                             trans = 'log')
 print(dist_map)
-ggsave(paste0(fig_dir,'dist-map-abundance-',spp,note,'.png'), 
+ggsave(paste0(fig_dir,'dist-map-abundance-',spp,note,'.png'),
        width = 5, height = 5)
-ggsave(paste0(results_dir,'dist-map-abundance-',spp,note,'.png'), 
+ggsave(paste0(results_dir,'dist-map-abundance-',spp,note,'.png'),
        width = 5, height = 5)
 
 # covarate effect if appropriate ###############################################
