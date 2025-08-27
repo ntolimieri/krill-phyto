@@ -78,9 +78,22 @@ paste0(spp," \~ 0 + f_year + s(scale_day, k = 3) + s(scale_depth, k =
 - ran base models for QQplots with spatial and spatiotemporal fields
 -- difficulty with most models. Dropping spatial field allows fit with good Sanity outputs but QQplots for most distributions pretty marginal.
 
-
-
 # Notes to self
 
 **2025-07-29** Testing distributions for diat_diatDino ratio. There are
 several below zero number that mess up QQplots. Might delete them. 20 in total. 
+
+## DIATOMS
+
+Krill are probably eating diatoms...so focus on those.
+
+Big, no spikes...
+
+- Cerataulina,Dactyliosolen,Detonula,Guinardia
+- Lauderia
+
+Big-with spikes...
+
+- Chaetoceros_chain,Chaetoceros_single
+- Eucampia
+- Thalassiosira_chain

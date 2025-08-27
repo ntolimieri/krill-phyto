@@ -7,21 +7,17 @@ library(tidyverse)
 library(geosphere) # For calculating geographic distances
 setwd("~/GitHub/krill-phyto")
 main_dir = getwd()
-data_dir = paste(main_dir,'/data/')
+data_dir = paste0(main_dir,'/data/')
 
 # --- Configuration --- ########################################################
 # Define the paths to your input files
 # The  primary data file
 
-# file1_path <- data.frame(read.csv( paste0(data_dir,"PB_NASC_sizeclass.csv"), header=TRUE)) 
-# output_file_path <- paste0(data_dir,"PB_NASC_sizeclass_with_depth.csv")
-
-
-file1_path <- data.frame(read.csv( paste0(data_dir,"PB_NASC_v5.csv.csv"), header=TRUE)) 
-output_file_path <- paste0(data_dir,"PB_NASC_v5.csv_with_depth.csv")
+data_main <- data.frame(read.csv( paste0(data_dir,"PB_NASC_sizeclass2.csv"), header=TRUE)) 
+output_file_path <- paste0(data_dir,"PB_NASC_sizeclass2_with_depth.csv")
 
 # the file with depth
-file2_path <- data.frame(read.delim("Tolimieri_et_al_2015_Ecosphere_2km_grid.txt", header=TRUE))
+data_depth <- data.frame(read.delim("Tolimieri_et_al_2015_Ecosphere_2km_grid.txt", header=TRUE))
 
 # Define column names for latitude and longitude in both files
 # Ensure these match your actual column names
@@ -31,12 +27,6 @@ lon_col_file1 <- "LON"
 lat_col_file2 <- "LAT"
 lon_col_file2 <- "LON"
 depth_col_file2 <- "SRTM_M" # The column in file2 that contains depth
-
-# --- Read the data files ---
-message(paste("Reading file 1:", file1_path))
-data_main <- file1_path
-message(paste("Reading file 2:", file2_path))
-data_depth <- file2_path
 
 # --- Data Preparation ---
 # Ensure latitude and longitude columns are numeric

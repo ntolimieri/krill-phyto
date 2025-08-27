@@ -1,0 +1,17 @@
+"","model","all_ok","aic","delta"
+"unlist.sanity.m1..26","avNASC-sm_depth-tweedie-log-spatial-on-spatiotemp-iid-Aniso-746-knots",TRUE,15875.9770989139,2.64468392966228
+"unlist.sanity.m1..2","avNASC-depth-tweedie-log-spatial-on-spatiotemp-iid-Aniso-746-knots",TRUE,15925.2604829029,51.9280679186522
+"unlist.sanity.m1..","avNASC-day-tweedie-log-spatial-on-spatiotemp-iid-Aniso-746-knots",TRUE,15931.4586590117,58.126244027455
+"unlist.sanity.m1..28","avNASC-tweedie-log-spatial-on-spatiotemp-iid-Aniso-746-knots",TRUE,15935.5103314126,62.1779164283471
+"unlist.sanity.m1..23","avNASC-sm_day-sm_depth-tweedie-log-spatial-on-spatiotemp-off-Aniso-746-knots",TRUE,16022.7800947407,149.447679756451
+"unlist.sanity.m1..19","avNASC-sm_day-sm_depth-linear_phyto-tweedie-log-spatial-on-spatiotemp-off-Aniso-746-knots",TRUE,16023.5294797318,150.197064747577
+"unlist.sanity.m1..21","avNASC-sm_day-sm_depth-quadratic_phyto-tweedie-log-spatial-on-spatiotemp-off-Aniso-746-knots",TRUE,16025.4542224629,152.121807478628
+"unlist.sanity.m1..27","avNASC-sm_depth-tweedie-log-spatial-on-spatiotemp-off-Aniso-746-knots",TRUE,16039.0670317422,165.734616757911
+"unlist.sanity.m1..9","avNASC-sm_day-depth-tweedie-log-spatial-on-spatiotemp-off-Aniso-746-knots",TRUE,16066.5546233962,193.222208411948
+"unlist.sanity.m1..7","avNASC-sm_day-depth-linear_phyto-tweedie-log-spatial-on-spatiotemp-off-Aniso-746-knots",TRUE,16068.1967294442,194.864314459986
+"unlist.sanity.m1..1","avNASC-day-tweedie-log-spatial-on-spatiotemp-off-Aniso-746-knots",TRUE,16077.9467446711,204.614329686856
+"unlist.sanity.m1..25","avNASC-sm_day-tweedie-log-spatial-on-spatiotemp-off-Aniso-746-knots",TRUE,16079.0052857896,205.672870805329
+"unlist.sanity.m1..3","avNASC-depth-tweedie-log-spatial-on-spatiotemp-off-Aniso-746-knots",TRUE,16079.5773031755,206.244888191248
+"unlist.sanity.m1..13","avNASC-sm_day-linear_phyto-tweedie-log-spatial-on-spatiotemp-off-Aniso-746-knots",TRUE,16080.7104070804,207.377992096126
+"unlist.sanity.m1..15","avNASC-sm_day-quadratic_phyto-tweedie-log-spatial-on-spatiotemp-off-Aniso-746-knots",TRUE,16082.643091114,209.310676129799
+"unlist.sanity.m1..29","avNASC-tweedie-log-spatial-on-spatiotemp-off-Aniso-746-knots",TRUE,16090.8904313952,217.558016410965

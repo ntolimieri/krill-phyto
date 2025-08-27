@@ -27,8 +27,8 @@ fig_dir = paste0(home_dir,'/figures/')
 # data import, cleanup, prep ###################################################
 
 
-df = data.frame(read.csv( paste0(data_dir,"PB_NASC_v5_with_depth.csv"), header=TRUE))
-# df = data.frame(read.csv( paste0(data_dir,"PB_NASC_sizeclass_with_depth.csv"), header=TRUE))
+# df = data.frame(read.csv( paste0(data_dir,"PB_NASC_v5_with_depth.csv"), header=TRUE))
+df = data.frame(read.csv( paste0(data_dir,"PB_NASC_sizeclass2_with_depth.csv"), header=TRUE))
 
 head(df)
 
@@ -39,8 +39,8 @@ df = df %>% rename(lat = LAT, lon = LON, temp=TEMP, sal=SAL, depth = matched_dep
 # Cerataulina,Dactyliosolen,Detonula,Guinardia
 # Lauderia
 
-df = df %>% mutate(big1 = Cera_Dact_Deto_Guin + Lauderia,
-                   all_big = big1+ Chaetoceros+Eucampia+Thalassiosira)
+# df = df %>% mutate(big1 = Cera_Dact_Deto_Guin + Lauderia,
+#                    all_big = big1+ Chaetoceros+Eucampia+Thalassiosira)
 
 
 # add year and julian day ######################################################
@@ -55,10 +55,11 @@ head(df)
 
 # data prep ####################################################################
 # diat_diatDino=log10((PB.diatom+1./(PB.diatom+PB.dino+1)))
-df = df %>% mutate(diat_diatDino = log10((diatom+1/(diatom+dino+1))),
-                   Dino_diatDino = log10((dino+1/(diatom+dino+1))),
-                   diat_dino = diatom/dino
-                   )
+
+# df = df %>% mutate(diat_diatDino = log10((diatom+1/(diatom+dino+1))),
+#                    Dino_diatDino = log10((dino+1/(diatom+dino+1))),
+#                    diat_dino = diatom/dino
+#                    )
 # ##############################################################################
 # FIT SDM MODELS ###############################################################
 ################################################################################
@@ -76,7 +77,7 @@ dim(df_sdm)
 
 # add covarate if appropriate
 phyto = c("diat_diatDino", "diatom", "dino", "Pseudonitzschia",
-         'Cera_Dact_Deto_Guin', 'big1', 'all_big',NA)[1] 
+         'Cera_Dact_Deto_Guin', 'big1', 'all_big','NBSS_slope',NA)[8] 
 phyto
 
 # scale phyto for fitting or not
@@ -198,7 +199,7 @@ for(i in 1:n){ # short to look at distributions and QQ plots
     mesh = mesh,
     time = "year",
     spatial = 'on',
-    spatiotemporal = 'off', 
+    spatiotemporal = 'iid', 
     anisotropy=TRUE,
     family = tweedie(),
     silent=FALSE
@@ -268,7 +269,7 @@ dir.create(cross_dir)
 # library(future)
 # plan(multisession)
 
-for(i in 1:ncf){ # SET AS NEEDED
+for(i in 1:7){ # SET AS NEEDED
   xform = as.formula(cross_forms[[i]])
   print(xform)
   if(exists('sv')){rm(sv)}
