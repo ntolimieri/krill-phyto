@@ -13,8 +13,8 @@ f_year2023       2.52    0.29
 sscale_depth    -0.78    0.11
 
 Smooth terms:
-                 Std. Dev.
-sds(scale_depth)     60.26
+                Std. Dev.
+sds(scale_depth     60.26
 
 Dispersion parameter: 8.04
 Tweedie p: 1.74

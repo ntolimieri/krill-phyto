@@ -15,10 +15,10 @@ sscale_depth    -0.73    0.09
 sphyto          -0.28    0.07
 
 Smooth terms:
-                 Std. Dev.
-sds(scale_day)        1.11
-sds(scale_depth)     54.33
-sds(phyto)            0.00
+                Std. Dev.
+sds(scale_day        1.11
+sds(scale_depth     54.33
+sds(phyto            0.00
 
 Dispersion parameter: 9.35
 Tweedie p: 1.77

@@ -15,9 +15,9 @@ sscale_day       0.40    0.17
 sscale_depth    -0.77    0.10
 
 Smooth terms:
-                 Std. Dev.
-sds(scale_day)        0.00
-sds(scale_depth)     59.46
+                Std. Dev.
+sds(scale_day        0.00
+sds(scale_depth     59.46
 
 Dispersion parameter: 8.07
 Tweedie p: 1.74

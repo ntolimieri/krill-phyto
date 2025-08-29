@@ -13,8 +13,8 @@ f_year2023     2.33    0.31
 sscale_day     0.48    0.19
 
 Smooth terms:
-               Std. Dev.
-sds(scale_day)         0
+              Std. Dev.
+sds(scale_day         0
 
 Dispersion parameter: 8.15
 Tweedie p: 1.75

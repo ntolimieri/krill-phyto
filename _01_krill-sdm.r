@@ -27,8 +27,8 @@ fig_dir = paste0(home_dir,'/figures/')
 # data import, cleanup, prep ###################################################
 
 
-# df = data.frame(read.csv( paste0(data_dir,"PB_NASC_v5_with_depth.csv"), header=TRUE))
-df = data.frame(read.csv( paste0(data_dir,"PB_NASC_sizeclass2_with_depth.csv"), header=TRUE))
+df = data.frame(read.csv( paste0(data_dir,"PB_NASC_v5_with_depth.csv"), header=TRUE))
+# df = data.frame(read.csv( paste0(data_dir,"PB_NASC_sizeclass2_with_depth.csv"), header=TRUE))
 
 head(df)
 
@@ -56,10 +56,10 @@ head(df)
 # data prep ####################################################################
 # diat_diatDino=log10((PB.diatom+1./(PB.diatom+PB.dino+1)))
 
-# df = df %>% mutate(diat_diatDino = log10((diatom+1/(diatom+dino+1))),
-#                    Dino_diatDino = log10((dino+1/(diatom+dino+1))),
-#                    diat_dino = diatom/dino
-#                    )
+df = df %>% mutate(diat_diatDino = log10((diatom+1/(diatom+dino+1))),
+                   Dino_diatDino = log10((dino+1/(diatom+dino+1))),
+                   diat_dino = diatom/dino
+                   )
 # ##############################################################################
 # FIT SDM MODELS ###############################################################
 ################################################################################
@@ -77,15 +77,15 @@ dim(df_sdm)
 
 # add covarate if appropriate
 phyto = c("diat_diatDino", "diatom", "dino", "Pseudonitzschia",
-         'Cera_Dact_Deto_Guin', 'big1', 'all_big','NBSS_slope',NA)[8] 
+         'Cera_Dact_Deto_Guin', 'big1', 'all_big','NBSS_slope',NA)[1] 
 phyto
 
 # scale phyto for fitting or not
 # df_sdm$phyto = scale(df_sdm[,phyto])
 df_sdm$phyto = df_sdm[,phyto]
 
-ggplot(df_sdm, aes(phyto)) + 
-  geom_histogram()
+# ggplot(df_sdm, aes(phyto)) + 
+#   geom_histogram()
 
 # remove negative and zero values for diat_diatDino ration
 # total of about 14 points
@@ -93,9 +93,9 @@ nrow(df_sdm)
 if(phyto == "diat_diatDino"){df_sdm = df_sdm[df_sdm$phyto>0,]}
 nrow(df_sdm)
 
-ggplot(df_sdm, aes(phyto)) + 
-  geom_histogram()
-ggsave( paste0(results_dir,"phyto-hist.png"))
+# ggplot(df_sdm, aes(phyto)) + 
+#  geom_histogram()
+# ggsave( paste0(results_dir,"phyto-hist.png"))
 
 # make results dir #############################################################
 # file for testing distributions etc
@@ -357,32 +357,30 @@ write.csv(df_good, paste0(cross_dir,"GCV-log-likelihoods-good-sanity.csv"),
 ################################################################################
 
 spp = 'avNASC'
-phyto = 'diat_diatDino'
+phyto = c('diat_diatDino','NBSS_slope')[1]
 results_dir = paste0(home_dir,'/results-',spp,"-", phyto,"/")
 results_dir
 cross_dir = paste0(results_dir,'cross-validation/')
+cross_dir
 
 df_good = read.csv(paste0(cross_dir,"GCV-log-likelihoods-good-sanity.csv"))
 
 # double check row here
 best_fit_name = df_good[1,'model']
 best_fit_name
+z = dir(results_dir)
+z = z[grep(best_fit_name,z)]
+paste0('sdm-',best_fit_name,'.rds')
+z[4]
 bfit = readRDS( paste0(results_dir,'sdm-',best_fit_name,'.rds'))
+bfit
 # save out best fit for future reference
 capture.output(best_fit_name, file = paste0(results_dir,"best-fit-model-name.txt"))
 capture.output(bfit, file = paste0(results_dir,"best-fit-model-results.txt"))
 saveRDS(bfit, paste0(results_dir, "Best-fit-model.rds"))
-bfit
+print(bfit, edf=TRUE)
 sanity(bfit)
 
-# # alternate reload models 
-# q = dir(results_dir)
-# q = q[grep("sdm",q)]
-# q
-# 
-# best_fit_name = q[6]
-# best_fit_name
-# bfit = readRDS( paste0(results_dir,best_fit_name))
 ################################################################################
 # predictions & index ##########################################################
 ################################################################################
@@ -443,7 +441,11 @@ p_grid = predict(bfit, newdata = wc, return_tmb_object = TRUE)
 # index$i_upr = index$upr/ max(index$upr)
 # index$i_lwr = index$lwr/ max(index$upr)
 # # save out
-saveRDS(p_grid, file = paste0(results_dir,'predictions-',spp,'.rds'))
+
+if(is.na(phyto)){saveRDS(p_grid, file = paste0(results_dir,'predictions-',spp,'.rds'))}else{
+  saveRDS(p_grid, file = paste0(results_dir,'predictions-',spp,'-',phyto,'.rds'))}
+
+# saveRDS(p_grid, file = paste0(results_dir,'predictions-',spp,'-',phyto,'.rds'))
 # write.csv(index, paste0(results_dir,'index-',spp,'.csv'))
 
 ################################################################################
@@ -495,7 +497,8 @@ head(p)
 
 # map note #####################################################################
 note = "-best"
-################################################################################
+
+# plot density map #############################################################
 
 # abundance from detla model
 dist_map <- plot_dist_maps(pshort, z_var = "cpue",
@@ -511,23 +514,85 @@ ggsave(paste0(fig_dir,'dist-map-abundance-',spp,note,'.png'),
 ggsave(paste0(results_dir,'dist-map-abundance-',spp,note,'.png'),
        width = 5, height = 5)
 
-# covarate effect if appropriate ###############################################
 
-dist_map2 <- plot_dist_maps(pshort, z_var = "phyto",
-                           Title = "zeta",
+## spatial effects ############################################################# 
+
+dist_map <- plot_dist_maps(pshort, z_var = "omega_s",
+                           Title = 'Spatial effect \n omega_s',
                            lat_range = latrange,
                            lon_range = lonrange,
                            color_opt = 'rbgradient',
-                           midp = 0.1, 
+                           midp = 0,
                            trans = 'identity')
-print(dist_map2)
-ggsave(paste0(fig_dir,'dist-map-zeta-',spp,note,'.png'), 
+print(dist_map)
+
+ggsave(paste0(fig_dir,'dist-map-omega_s-',spp,note,'.png'),
        width = 5, height = 5)
-ggsave(paste0(results_dir,'dist-map-zeta-',spp,note,'.png'), 
+ggsave(paste0(results_dir,'ist-map-omega_s-',spp,note,'.png'),
        width = 5, height = 5)
 
-# anisotropy
+## spatio-temporal effects #####################################################
+# not in all models
+
+dist_map <- plot_dist_maps(pshort, z_var = "Spatio-temporal \n epsilon_st",
+                           Title = spp,
+                           lat_range = latrange,
+                           lon_range = lonrange,
+                           color_opt = 'rbgradient',
+                           midp = 0,
+                           trans = 'identity')
+print(dist_map)
+
+ggsave(paste0(fig_dir,'dist-map-epsilon_st-',spp,note,'.png'),
+       width = 5, height = 5)
+ggsave(paste0(results_dir,'ist-map-epsilon_st-',spp,note,'.png'),
+       width = 5, height = 5)
+
+
+
+
+# anisotropy ###################################################################
 anis = plot_anisotropy(bfit)
 anis + theme_bw()
 ggsave(paste0(results_dir,'anisotropy-',spp,'.png'), width = 3.5, height=5)
+
+# smoohts ######################################################################
+library(ggeffects)
+
+# re-run without time column to plot smooths ###################################
+# bit annoying but actually the same model
+
+xform = as.formula(forms[[13]])
+xform  
+
+fit <- sdmTMB(
+  formula = xform,
+  data = df_sdm,
+  mesh = mesh,
+  # time = "year",
+  spatial = 'on',
+  # spatiotemporal = 'off', 
+  anisotropy=TRUE,
+  family = tweedie(),
+  silent=FALSE
+) # end fit
+fit
+sanity(fit)
+# same
+
+# depth
+dat <- ggpredict(fit, terms = c("scale_depth [all]", "f_year"))
+plot(dat)
+ggsave(paste0(results_dir,'smooth-depth-',spp,'.png'), width = 3.5, height=5)
+
+# day
+dat <- ggpredict(fit, terms = c("scale_day [all]", "f_year"))
+plot(dat)
+ggsave(paste0(results_dir,'smooth-day-',spp,'.png'), width = 3.5, height=5)
+
+
+
+
+
+
 

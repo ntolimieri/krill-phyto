@@ -15,8 +15,8 @@ I(phyto^2)     0.03    0.06
 sscale_day     0.50    0.16
 
 Smooth terms:
-               Std. Dev.
-sds(scale_day)      1.64
+              Std. Dev.
+sds(scale_day      1.64
 
 Dispersion parameter: 9.35
 Tweedie p: 1.77
